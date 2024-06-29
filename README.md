@@ -1,70 +1,284 @@
-# Getting Started with Create React App
+# Redux Todo List App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is an enhanced version of a Todo List application, utilizing Redux for state management. It features a modern design, routing for different pages, and well-structured components. The app leverages Redux Toolkit to simplify the creation of reducers, stores, and their integration within the components.
 
-## Available Scripts
+## Table of Contents
+- [Features](#features)
+- [Initial State](#initial-state)
+- [State Management with Redux](#state-management-with-redux)
+  - [Creating the Slice](#creating-the-slice)
+  - [Configuring the Store](#configuring-the-store)
+- [Routing](#routing)
+- [Components](#components)
+  - [Items Component](#items-component)
+  - [All Tasks Page](#all-tasks-page)
+  - [Item Component](#item-component)
+  - [New Task Page](#new-task-page)
+- [Future Enhancements](#future-enhancements)
 
-In the project directory, you can run:
+## Features
+- Modern design and styles
+- State management using Redux and Redux Toolkit
+- Routing with `react-router-dom` for navigation between different pages
+- Components and hooks to manage state within individual pages
+- Initial state defined as a simple array of tasks
 
-### `npm start`
+## Initial State
+The initial state of the application is defined as a simple array of tasks:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```javascript
+export const initialTasks = [
+   {
+      id: 1,
+      title: "Complete TODO project",
+      completed: false
+   },
+   {
+      id: 2,
+      title: "Buy funny toy for my cat",
+      completed: false
+   },
+   {
+      id: 3,
+      title: "Check my weekly weight",
+      completed: true
+   }
+];
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## State Management with Redux
 
-### `npm test`
+### Creating the Slice
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The tasksSlice.js file defines the Redux slice for managing tasks:
 
-### `npm run build`
+```javascript
+import { createSlice } from "@reduxjs/toolkit";
+import { initialTasks } from "../data/tasks";
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+const tasksSlice = createSlice({
+   name: "tasks",
+   initialState: initialTasks,
+   reducers: {
+      addTask: (state, action) => {
+         state.unshift(action.payload);
+      },
+      removeTask: (state, action) => {
+         return state.filter(todo => todo.id !== action.payload);
+      },
+      toggleComplete: (state, action) => {
+         const task = state.find(t => t.id === action.payload);
+         if (task) task.completed = !task.completed;
+      }
+   }
+});
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+export const { addTask, removeTask, toggleComplete } = tasksSlice.actions;
+export default tasksSlice.reducer;
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
 
-### `npm run eject`
+### Configuring the Store
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The store.js file configures the Redux store:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```javascript
+import { configureStore } from "@reduxjs/toolkit";
+import tasksSlice from "../features/tasksSlice";
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+const store = configureStore({
+   reducer: {
+      tasks: tasksSlice
+   }
+});
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+export default store;
 
-## Learn More
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Routing
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The app uses react-router-dom for routing. Here is the App.js file with the routes:
 
-### Code Splitting
+```javascript
+import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
+import './App.css';
+import { Root } from './components/Root';
+import { AllTasks } from './pages/AllTasks';
+import { CompletedTasks } from './pages/CompletedTasks';
+import { PendingTasks } from './pages/PendingTasks';
+import { NewTask } from './pages/NewTask';
+import { Page404 } from './pages/Page404';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+function App() {
+  const myRoute = createBrowserRouter(createRoutesFromElements(
+    <Route path="/" element={<Root />}>
+      <Route index element={<AllTasks />}/>
+      <Route path="/completed" element={<CompletedTasks />}/>
+      <Route path="/pending" element={<PendingTasks />}/>
+      <Route path="/new" element={<NewTask />}/>
+      <Route path="/404" element={<Page404 />}/>
+      <Route path="*" element={<Page404 />}/>
+    </Route>
+  ));
 
-### Analyzing the Bundle Size
+  return (
+    <RouterProvider router={myRoute} />
+  );
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+export default App;
 
-### Making a Progressive Web App
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Components
 
-### Advanced Configuration
+### Items Component
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+The Items component displays a list of tasks:
 
-### Deployment
+```javascript
+import { Item } from "./Item";
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+export function Items({ tasks, pageName }) {
+   return (
+      <div className="tasks">
+         <h1>{pageName}</h1>
+         {tasks && tasks.length > 0 ? (
+            <div className="items">
+               {tasks.map((task, index) => (
+                  <div key={index}>
+                     <Item task={task} />
+                  </div>
+               ))}
+            </div>
+         ) : (
+            <p>No tasks to show....</p>
+         )}
+      </div>
+   );
+}
 
-### `npm run build` fails to minify
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### All Tasks Page
+
+The AllTasks page fetches all tasks from the Redux store:
+
+```javascript
+import { useSelector } from "react-redux";
+import { Items } from "../components/Items";
+
+export function AllTasks() {
+   const tasks = useSelector(state => state.tasks);
+   return (
+      <Items tasks={tasks} pageName="All Tasks" />
+   );
+}
+
+```
+
+### Item Component
+
+The Item component represents an individual task with controls to toggle completion and remove the task:
+
+```javascript
+import { useDispatch } from "react-redux";
+import { removeTask, toggleComplete } from "../features/tasksSlice";
+
+export function Item({ task }) {
+   const dispatch = useDispatch();
+   return (
+      <div className="item">
+         <p>{task.title}</p>
+         <div className="controls">
+            <div className="checkbox-div">
+               <input type="checkbox" className="checkbox-complete" checked={task.completed} onChange={() => dispatch(toggleComplete(task.id))} />
+               <span>Completed</span>
+            </div>            
+            <button className="btn-remove" onClick={() => {
+               if (task.completed) dispatch(removeTask(task.id));
+               else alert('Before removing this task, you should complete it first!');
+            }}>X</button>
+         </div>
+      </div>
+   );
+}
+
+```
+
+### New Task Page
+
+The NewTask page allows users to add a new task:
+
+```javascript
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { addTask } from "../features/tasksSlice";
+import { createIdFromDate } from "../utils/helper";
+
+export function NewTask() {
+   const dispatch = useDispatch();
+   const [title, setTitle] = useState('');   
+
+   const notifSuccess = {
+      text: "Task has been created successfully.",
+      class: "created-task-notif"
+   };
+   const notifFail = {
+      text: "Fail! Task has not been created. Check the title and try again.",
+      class: "failed-task-notif"
+   };
+   const notifEmpty = {
+      text: "Foo.",
+      class: "no-show"
+   };
+   const [notif, setNotif] = useState(notifEmpty);
+
+   function handleTitleInput(e) {
+      setNotif(notifEmpty);
+      setTitle(e.target.value);
+   }
+
+   function handleSubmit(e) {
+      e.preventDefault();
+      if (title.length === 0) return setNotif(notifFail);
+      dispatch(addTask({
+         id: createIdFromDate(),
+         title: title,
+         completed: false
+      }));
+      setTitle('');
+      setNotif(notifSuccess);
+   }
+
+   return (
+      <div className="new-task-content">
+         <h1>New task</h1>
+         <form onSubmit={handleSubmit}>
+            <div className="new-task-input">
+               <label htmlFor="task">ToDo title:</label>
+               <input id="task" className="new-task-title" type="text" placeholder="Example: Feed my cat" value={title} onChange={handleTitleInput} />
+            </div>
+            <input type="submit" className="new-task-submit" value="Create new task" />
+         </form>         
+         {notif.class === "no-show" ? (
+            <span className="no-show">{notif.text}</span> 
+         ) : notif.class === "created-task-notif" ? (
+            <span className="created-task-notif">{notif.text}</span> 
+         ) : (
+            <span className="failed-task-notif">{notif.text}</span> 
+         )}
+      </div>      
+   );
+}
+
+```
+
+## Future Enhancements
+
+* Implement user authentication and authorization
+* Add the ability to edit tasks
+* Integrate with a backend service for persistent storage
+* Improve UI/UX with advanced animations and transitions
+
