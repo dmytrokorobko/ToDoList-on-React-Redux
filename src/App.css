@@ -346,8 +346,7 @@ footer a:hover {
   }
 
   .item .controls {
-    display: flex;
-    flex-grow: 1;
+    display: flex;    
     justify-content: space-between;
   }
 
