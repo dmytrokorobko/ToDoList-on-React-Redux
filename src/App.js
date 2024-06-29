@@ -18,7 +18,9 @@ function App() {
       <Route path="/404" element={<Page404 />}/>
       <Route path="*" element={<Page404 />}/>
     </Route>
-  ));
+  ), {
+    basename: '/ToDoList-on-React-Redux'
+  });
 
   return (
     <RouterProvider router={myRoute} />
