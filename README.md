@@ -171,6 +171,8 @@ import { Items } from "../components/Items";
 
 export function AllTasks() {
    const tasks = useSelector(state => state.tasks);
+   //const tasks = useSelector(state => state.tasks.filter(task => !task.completed)); //For PendingTasks page
+   //const tasks = useSelector(state => state.tasks.filter(task => task.completed)); //For CompletedTasks page
    return (
       <Items tasks={tasks} pageName="All Tasks" />
    );
